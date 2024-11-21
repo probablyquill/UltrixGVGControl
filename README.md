@@ -63,7 +63,7 @@ Query Name can be given the following parameters:
 
 Presumably this will be formatted as QN -> S -> [source_number] but this will need to be tested as the documentation was unhelpful.
 
-GVG Native does not appear to have a way to interface with Ross' locking system. It is presently unclear if that means it cannot interact with locked sources / destinations, or if it will override the lock to execute its command.
+GVG Native appears to interact with Ross' locking feature through the PR command. 
 
 ## Final goal for the production version of this project: 
 The final goal is to create a cross-platform Flutter(? undecided) application that can be deployed to allow management of a Ross Ultrix router via TCP. The program will connect over a local connection to perform take and query operations.
