@@ -1,67 +1,72 @@
-import socket
-
+# Takes a string of hex codes, seperates then sums them, and returns the 
+# two's compliment.
 def get_checksum(hex_data):
+    i = 0
+    total = 0
+    hex_data = hex_data.split(' ')
+    
+    while i < len(hex_data) - 1:
+        data = int(hex_data[i], 16)
+        total += data
+        i += 1
+    
     # Prevent overflow past max hex bit.
-    total = sum(hex_data) & 0xFF
+    total = total & 0xFF
 
     # Invert, add one for 2s compliment.
     twos_complement = (0x100 - total) & 0xFF
     return twos_complement
 
-def decimal_to_ascii_as_hex_to_hex(number):
+# To pass a number to the Ultrix router over the GVG protocol, a handful of 
+# conversions need to take place.
+# Decimal -> Hex e.x.: 15 -> 0x0F
+# Hex to 4 char ASCII string e.x. 0x0F -> 000F
+# ASCII string to hex e.x. 000F -> 3030303F
+# Said string is then sliced into each hex value e.x. 30 30 30 3F
+def gvg_conversion(number):
     output = hex(number).split('x')[-1]
     while (len(output) < 4):
         output = "0" + output
     
     output = output.encode('ascii')
     output = output.hex()
-    return output
+    i = 0
+    return_string = ""
+    while i < len(output):
+        return_string += output[i]
+        if(i % 2 != 0): return_string += " "
+        i += 1
 
-def send_data(host, port, message):
-    #Sends data to a TCP server.
+    return return_string
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-        client_socket.connect((host, port))
-        client_socket.sendall(message.encode("UTF-8"))
-
-soh = [0x01] 
-protocol = [0x4e, 0x30]
-eot = [0x04]
+soh = "01 "
+protocol = "4e 30 "
+eot = "04"
 
 # Take Index = Hex TI
 # Query Name = Hex QN
-take_index = [0x54, 0x49]
-query_name = [0x51, 0x4e]
-tab = [0x09]
+take_index = "54 49 "
+query_name = "51 4e "
+tab = "09 "
 
 # Destination 132, source 10
 # Have to convert decimal to hex 
 # then ascii (using hex values) to hex
 dest = 132 - 1
 
-source = 13 - 1
+source = 90 - 1
 
-dest_hex = [0x30, 0x30, dest, dest]
-source_hex = [0x30, 0x30, 48 + int(source / 16),48 + source % 16]
+dest_hex = gvg_conversion(dest)
+source_hex = gvg_conversion(source)
 
 pre_checksum = protocol + take_index + tab + dest_hex + tab + source_hex
 
-"""
-pre_checksum_hex = ""
-for item in pre_checksum:
-    pre_checksum_hex += hex(item) + " "
-"""
+checksum = gvg_conversion(get_checksum(pre_checksum))
 
+#Source / dest values are padded when converted, and so the checksum has to be trimmed.
+output = (soh + pre_checksum + checksum[6:] + eot).upper()
 
-# Adds 48 (0x30) to the broken up checksum.
-checksum_hex = []
-
-command = soh + pre_checksum + checksum_hex + eot
-
-# mine (not working:)
-# 01 4e 30 54 49 09 30 30 37 35 09 30 30 35 39 33 39 04 
+print(output)
 
 # forums (working):
 # 01 4E 30 54 49 09 30 30 37 35 09 30 30 35 39 33 39 04
-
-print(decimal_to_ascii_as_hex_to_hex(132))
