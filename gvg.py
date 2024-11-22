@@ -43,7 +43,7 @@ def gvg_conversion(input):
     if type(input) is int:
         output = hex(input)
     elif type(input) is str:
-        output = input
+        output = input.upper()
     else:
         raise TypeError("Unsupported type: must be str or int.")
 
@@ -88,16 +88,25 @@ def gvg_command(command, arg1, arg2):
     
     return output
 
+def gvg_command2(command, arg1):
+    arg1 = gvg_conversion(arg1)
+    pre_checksum = protocol + command + tab + arg1[6:] #Arg trimmed to clear off leading 0x30s.
+    checksum = gvg_conversion(get_checksum(pre_checksum))
+
+    output = (soh + pre_checksum + checksum[6:] + eot).upper()
+    
+    return output
+
 # Test for Take Index, dest 132 source 10
-command = gvg_command(ti, 132, 10)
-print(command)
+#command = gvg_command(ti, 132, 10)
+#print(command)
 
 # Test for Query Name, destination 132
-command = gvg_command(qn, "IS", 132)
+command = gvg_command2(qn, "ID")
 print(command)
-
 # Example from forums (working, dest 118 source 90):
 # 01 4E 30 54 49 09 30 30 37 35 09 30 30 35 39 33 39 04
+# 01 4E 30 51 4E 09 4E 09 38 63 04
 
 # QN Command to test:
 # 01 4E 30 51 4E 09 30 30 34 34 09 30 30 38 33 33 65 04

@@ -1,7 +1,7 @@
 # Communicating with a Ross Ultrix Router over IP using the GVG protocol
 The goal of this project is to create a program that can interface with a Ross Ultrix Router over IP using the GVG protocol documented in the Ross Ultix User Guide verison 5.6.0.
 
-The protocol can be found on page 312 of the User Guide.
+The supported commands in the protocol can be found on page 312 of the User Guide.
 
 ## Formatting GVG Commands:
 Resources for reference:
@@ -9,11 +9,12 @@ Resources for reference:
 - [Ross Website: GVG Controls](https://help.rossvideo.com/acuity-device/Topics/Devices/Editor/GVG100.html)
 - [Ross Forums: GVG Native Protocol](https://rossvideo.community/communities/community-home/digestviewer/viewthread?GroupId=301&MID=24269&CommunityKey=43f96bed-ff4a-4d2b-8f71-d4f218c9dd77&ReturnUrl=%2Fcommunities%2Fcommunity-home%2Fdigestviewer%3FCommunityKey%3D43f96bed-ff4a-4d2b-8f71-d4f218c9dd77)
 - [Ross Forums: Ultrix GVG Native Protocol Commands](https://rossvideo.community/discussion/ultrix-gvg-native-protocol-commands )
+- [GVG Routing Products Protocols](https://www.grassvalley.jp/pdf/RoutingProductsProtocolManual_2.pdf)
 
 
 The GVG Native Commands need to be transfered over the network via TCP, in the form of hex codes. There is a Windows only tool for sending these codes called [Hercules](https://www.hw-group.com/software/hercules-setup-utility). 
 
-The following explanation was made using information in the Reddit post and Ross Forum posts:
+Example of what the TI command looks like, made using information in the Reddit post and Ross Forum posts:
 
 | Hex Code | Translation / Command |
 | --- | --- |
@@ -36,6 +37,12 @@ The following explanation was made using information in the Reddit post and Ross
 | 0x36 | Checksum byte1 (character “C”) |
 | 0x04 | EOT (end of transmission) |
 
+In other words, formatting of commands is as follows:
+
+[soh][protocol][sequence][command][checksum][eot]
+
+Commands in the documentation often have parameters, such as QN,IS. The "," is a horizontal tab, 0x09. Most commands do not require a trailing tab before the checksum.
+
 ### Encoding data to send:
 To send a number as data over the GVG Native protocol requires undertaking several steps.
 1. The number needs to be converted from decimal to hex. (e.x. 15 -> 0x0F). 
@@ -50,10 +57,12 @@ The checksum is created by summing all of the hex between 4E and the final hex p
 ## Commands to Implement:
 The commands which need to be implemented to create a custom software panel are as follows: 
 
-| Command | Hex Code | 
-| --- | --- |
-| Take Index (TI) | 0x54 0x49 |
-| Query Name (QN) | 0x51 0x4E | 
+| Command | Format | Hex Code |
+| --- | --- | --- | 
+| Take Index | TI,dest_number,source_number | 0x54 0x49 |
+| Query Name | QN,IS | 0x51 0x4E | 
+| Remove Protect | UP,dest_name | 0x55 0x50 |
+| Query Destination | QI,dest_index | 0x51 0x49 | 
 
 Query Name can be given the following parameters:
 - S: Source names
@@ -61,7 +70,7 @@ Query Name can be given the following parameters:
 - IS: Name by source index.
 - ID: Name by destination index.
 
-Presumably this will be formatted as QN -> S -> [source_number] but this will need to be tested as the documentation was unhelpful.
+These commands do not take any additional commands aside from the QN,S/D/IS/ID commands. (e.x.) Formatted as QN 0x09 S. The router will respond with all of the source/destination names.
 
 GVG Native appears to interact with Ross' locking feature through the PR command. 
 
