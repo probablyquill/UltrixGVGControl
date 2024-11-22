@@ -14,27 +14,16 @@ Resources for reference:
 
 The GVG Native Commands need to be transfered over the network via TCP, in the form of hex codes. There is a Windows only tool for sending these codes called [Hercules](https://www.hw-group.com/software/hercules-setup-utility). 
 
-Example of what the TI command looks like, made using information in the Reddit post and Ross Forum posts:
+Example of what the sending a command looks like, made using information in the Reddit post and Ross Forum posts:
 
 | Hex Code | Translation / Command |
 | --- | --- |
 | 0x01 | SOH (start of heading) |
 | 0x4E | N (protocol identification)|
 | 0x30 | 0 (Sequence number, will be set to zero.) |
-| 0x54 | T |
-| 0x49 | I (TI = Take Index) |
-| 0x09 | TAB (horizontal tab) |
-| 0x30 | Hex conversion of an ascii encoding of the hex as a string (more below). |
-| 0x30 | " |
-| 0xXX | " |
-| 0xXX | " |
-| 0x09 | Horizontal tab |
-| 0x30 | Hex conversion of an ascii encoding of the hex as a string (more below). |
-| 0x30 | " |
-| 0xXX | " |
-| 0xXX | " |
-| 0x34 | Checksum byte0 (character “2”) (see second note below) |
-| 0x36 | Checksum byte1 (character “C”) |
+| [0x??-0x??] | Command with arguments if applicable. |
+| 0x?? | Checksum byte0 (character “2”) (see notes below) |
+| 0x?? | Checksum byte1 (character “C”) |
 | 0x04 | EOT (end of transmission) |
 
 In other words, formatting of commands is as follows:
