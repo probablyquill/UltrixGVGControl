@@ -102,12 +102,12 @@ def gvg_command2(command, arg1):
     return output
 
 # Test for Take Index, dest 132 source 10
-command = gvg_command(ti, 132, 16)
-print(command)
+# command = gvg_command(ti, 132, 16)
+# print(command)
 
 # Test for Query Name, destination 132
-#command = gvg_command2(qn, "IS")
-#print(command)
+command = gvg_command2(qn, "D")
+print(command)
 # Example from forums (working, dest 118 source 90):
 # 01 4E 30 54 49 09 30 30 37 35 09 30 30 35 39 33 39 04
 # 01 4E 30 51 4E 09 4E 09 38 63 04

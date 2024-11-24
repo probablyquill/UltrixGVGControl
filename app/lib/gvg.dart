@@ -1,3 +1,8 @@
+String soh = "01 ";
+String protocol = "4E 30 ";
+String eol = "04";
+String tab = "09 ";
+
 void connect(String host, int port, String message) {
 
 }
@@ -52,10 +57,39 @@ String gvgChecksum(String preChecksum) {
 }
 
 String gvgTake(int destination, int source) {
+  String take = "54 49 ";
+  
+  //GVG Protocol counts from zero.
+  destination = destination - 1;
+  source = source - 1;
 
-  return "";
+  String destHex = gvgConvertNumber(destination);
+  String sourceHex = gvgConvertNumber(source);
+
+  String takeCommand = "$protocol$take$tab$destHex$sourceHex";
+  String checksum = gvgChecksum(takeCommand);
+  takeCommand = "$soh$takeCommand$checksum$eol";
+  return takeCommand;
+}
+
+String queryDestination() {
+  String command = "51 4E 09 44 ";
+  command = "$protocol$command";
+
+  String checksum = gvgChecksum(command);
+  command = "$soh$command$checksum$eol";
+  return command;
+}
+
+String querySource() {
+  String command = "51 4E 09 53 ";
+  command = "$protocol$command";
+
+  String checksum = gvgChecksum(command);
+  command = "$soh$command$checksum$eol";
+  return command;
 }
 
 void main() {
-  print(gvgChecksum("4E 30 54 49 09 30 30 38 33 09 30 30 30 66 "));
+  print(queryDestination());
 }

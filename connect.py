@@ -23,7 +23,7 @@ def send_gvg_data(host: str, port, message: str):
 # Should work:
 # 01 4E 30 54 49 09 30 30 38 33 09 30 30 35 39 33 61 04
 if __name__ == "__main__":
-    message = "01 4E 30 51 4E 09 49 53 33 65 04"
+    message = "01 4E 30 51 4E 09 44 39 36 04"
     print(f"Sending: {message}")
     host = "192.168.77.225" # Ross IP Address
     port = 12345
