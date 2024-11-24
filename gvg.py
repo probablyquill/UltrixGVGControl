@@ -89,8 +89,12 @@ def gvg_command(command, arg1, arg2):
     return output
 
 def gvg_command2(command, arg1):
-    arg1 = gvg_conversion(arg1)
-    pre_checksum = protocol + command + tab + arg1[6:] #Arg trimmed to clear off leading 0x30s.
+    if len(arg1) == 1:
+        arg1 = gvg_conversion(arg1)[9:]
+    else:
+        arg1 = gvg_conversion(arg1)[6:]
+
+    pre_checksum = protocol + command + tab + arg1 #Arg trimmed to clear off leading 0x30s.
     checksum = gvg_conversion(get_checksum(pre_checksum))
 
     output = (soh + pre_checksum + checksum[6:] + eot).upper()
@@ -98,12 +102,12 @@ def gvg_command2(command, arg1):
     return output
 
 # Test for Take Index, dest 132 source 10
-#command = gvg_command(ti, 132, 10)
-#print(command)
+command = gvg_command(ti, 132, 16)
+print(command)
 
 # Test for Query Name, destination 132
-command = gvg_command2(qn, "ID")
-print(command)
+#command = gvg_command2(qn, "IS")
+#print(command)
 # Example from forums (working, dest 118 source 90):
 # 01 4E 30 54 49 09 30 30 37 35 09 30 30 35 39 33 39 04
 # 01 4E 30 51 4E 09 4E 09 38 63 04
