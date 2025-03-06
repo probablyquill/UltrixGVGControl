@@ -1,81 +1,87 @@
-import "package:flutter/material.dart";
-import "gvg.dart";
-
-const inputs = 144;
-const outputs = 144;
-
-int selectedDestination = 1;
-int selectedSource = 1;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-void test(int number) {
-  print(number);
-}
+class AppState extends ChangeNotifier {
+  var buttonList = <int>[];
 
-void updateSelected(bool input, int number) {
-  if (input) {
-    selectedSource = number;
-  } else {
-    selectedDestination = number;
+  void generateButtos() {
+    for (int i = 0; i < 144; i++) {
+        buttonList.add(i);
+    }
+    notifyListeners();
   }
 }
-
-/* Widgets to create for the application:
-1.) Segment for the Input Selection Buttons
-2.) Segment for the Output Selection Buttons
-3.) Widget with the Take button and selected I/O lables.
-*/
-
-class IOButton extends StatelessWidget {
-  final String label;
-  final int id;
-
-  // True = Input, False = Output
-  final bool input;
-
-  const IOButton(
-      {super.key, required this.label, required this.id, required this.input});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-        child: TextButton(
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-            ),
-            onPressed: () => updateSelected(input, id),
-            child: Text(label)));
-  }
-}
-
-// Generates the correct number of buttons with the assigned data needed to update 
-List<Widget> buildGrid(bool inputType) {
-  List<Widget> list = <IOButton>[];
-
-  for (int i = 1; i <= inputs; i++) {
-    list.add(IOButton(
-      id: i,
-      label: i.toString(),
-      input: inputType,
-    ));
-  }
-
-  return list;
-}
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
-            appBar: AppBar(
-                backgroundColor: Colors.green,
-                title: const Text("I don't know what I'm doing.")),
-            body: const Text("Text on the screen.")));
+    return ChangeNotifierProvider(
+      create: (context) => AppState(),
+      child: MaterialApp(
+        title: 'buttonTest',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        ),
+        home: HomePage(),
+      ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<AppState>();
+
+    if (appState.buttonList.isEmpty) {
+      return Center(
+        child: TextButton(
+          onPressed: () {
+            appState.generateButtos();
+          }, 
+          child: Text("Hit me"),
+          ),
+      );
+    }
+    return Scaffold(
+      body: Center(
+        child: ListView(
+          children: [
+            Text("Test"),
+            for (var i in appState.buttonList)
+              SwitcherButton(i: i),
+          ],
+        ),
+      ),
+    );
+  }
+
+}
+
+class SwitcherButton extends StatelessWidget {
+  SwitcherButton({
+    super.key,
+    required this.i,
+  });
+
+  final int i;
+  late final int displayInt = i + 1;
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        print("Button Pressed: $displayInt");
+      }, 
+      child: Text("Number $displayInt"),
+      );
   }
 }

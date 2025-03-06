@@ -51,7 +51,7 @@ String _gvgChecksum(String preChecksum) {
   return checksum;
 }
 
-String gvgTake(int destination, int source) {
+String take(int destination, int source) {
   String take = "54 49 ";
   
   //GVG Protocol counts from zero.
