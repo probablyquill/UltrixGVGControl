@@ -53,18 +53,58 @@ class HomePage extends StatelessWidget {
       );
     }
     return Scaffold(
-      body: Center(
-        child: ListView(
-          children: [
-            Text("Test"),
-            for (var i in appState.buttonList)
-              SwitcherButton(i: i),
+      body: Row(
+        children: [
+          NavigationRail(
+            labelType: NavigationRailLabelType.all,
+            destinations: [
+              NavigationRailDestination(
+                icon: Icon(Icons.control_camera_outlined), 
+                label: Text("Switcher")),
+              NavigationRailDestination(
+                icon: Icon(Icons.settings), 
+                label: Text("Settings")),
           ],
-        ),
-      ),
+          selectedIndex: 0,),
+          VerticalDivider(thickness: 1, width: 1,),
+          Expanded(child: SwitcherPanel()),
+          ],
+        )
     );
   }
 
+}
+
+class SwitcherPanel extends StatelessWidget {
+  const SwitcherPanel({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<AppState>();
+    final double width = MediaQuery.of(context).size.width;
+    final double height = MediaQuery.of(context).size.height;
+
+    return Center(
+      child: GridView.count(
+        primary: false,
+        padding: const EdgeInsets.all(10),
+        crossAxisCount: 16,
+        childAspectRatio: (width / height) / 1.8,
+        children: [
+          for (var i = 0; i < appState.buttonList.length; i++)
+            Padding(
+              padding: const EdgeInsets.all(1.5),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+                onPressed: () {
+                    print(i);
+              }, child: Text("${i + 1}")),
+            )
+        ],)
+    );
+  }
 }
 
 class SwitcherButton extends StatelessWidget {
