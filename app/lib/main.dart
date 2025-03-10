@@ -67,7 +67,7 @@ class HomePage extends StatelessWidget {
           ],
           selectedIndex: 0,),
           VerticalDivider(thickness: 1, width: 1,),
-          Expanded(child: SwitcherPanel()),
+          SwitcherPanel(),
           ],
         )
     );
@@ -82,28 +82,68 @@ class SwitcherPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    return Expanded(
+      child: Center(
+        child: Column(
+          children: [
+            Text("Header Bar Goes Here"),
+            Flexible(
+              child: Row(
+                children: [
+                  Column(children: [
+                    Text("Sources"),
+                    Text("Destinations"),
+                  ],),
+                  Flexible(child: ButtonGrid()),
+                  Column(children: [
+                    Text("TAKE"),
+                    Text("CLEAR"),
+                  ],),
+                ],
+              ),
+            ),
+          ],
+        ),
+        ),
+    );
+  }
+}
+
+class ButtonGrid extends StatelessWidget {
+  const ButtonGrid({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     var appState = context.watch<AppState>();
     final double width = MediaQuery.of(context).size.width;
     final double height = MediaQuery.of(context).size.height;
+    final int crossAxis = 16;
 
-    return Center(
-      child: GridView.count(
-        primary: false,
-        padding: const EdgeInsets.all(10),
-        crossAxisCount: 16,
-        childAspectRatio: (width / height) / 1.8,
-        children: [
-          for (var i = 0; i < appState.buttonList.length; i++)
-            Padding(
-              padding: const EdgeInsets.all(1.5),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
-                onPressed: () {
-                    print(i);
-              }, child: Text("${i + 1}")),
-            )
-        ],)
-    );
+    return GridView.count(
+      primary: false,
+      padding: const EdgeInsets.all(10),
+      crossAxisCount: crossAxis,
+      //childAspectRatio: (width / height) / 1.8,
+      children: [
+        for (var i = 0; i < appState.buttonList.length; i++)
+          Padding(
+            padding: const EdgeInsets.all(1.5),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+              onPressed: () {
+                  print(i);
+            }, child: FittedBox(
+              fit: BoxFit.fitWidth,
+              child: Text("${i + 1}"))),
+          )
+        ],
+      );
   }
 }
 
