@@ -75,6 +75,11 @@ class HomePage extends StatelessWidget {
 
 }
 
+//Placeholder action for unimplemented buttons.
+void placeholderAction() {
+  print("Placeholder Action Executed");
+}
+
 class SwitcherPanel extends StatelessWidget {
   const SwitcherPanel({
     super.key,
@@ -82,8 +87,7 @@ class SwitcherPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    final double height = MediaQuery.of(context).size.height;
+
     return Expanded(
       child: Center(
         child: Padding(
@@ -101,35 +105,12 @@ class SwitcherPanel extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
-                          onPressed: () {
-                        
-                        }, 
-                        child: SizedBox(
-                          width: 105,
-                          height: 60,
-                          child: Center(child: Text("SOURCES")))
-                        ),
+                        ControlButton(title: "SOURCES", action: placeholderAction,),
                         SizedBox(height: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
-                          onPressed: () {
-                        
-                        }, 
-                        child: SizedBox(
-                          width: 105,
-                          height: 60,
-                          child: Center(child: Text("DESTINATIONS")))
-                        ),
+                        ControlButton(title: "DESTINATIONS", action: placeholderAction),
                       ],),
                     ),
+                    // This should potentially be broken out into it's own component for readability.
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -161,34 +142,9 @@ class SwitcherPanel extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
-                          
-                          onPressed: () {
-                        
-                        }, 
-                        child: SizedBox(
-                          width: 105,
-                          height: 60,
-                          child: Center(child: Text("TAKE")))
-                        ),
+                        ControlButton(title: "TAKE", action: placeholderAction,),
                         SizedBox(height: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
-                          onPressed: () {
-                        
-                        }, 
-                        child: SizedBox(
-                          width: 105,
-                          height: 60,
-                          child: Center(child: Text("CLEAR")))
-                        ),
+                        ControlButton(title: "CLEAR", action: placeholderAction,),
                       ],),
                     ),
                   ],
@@ -198,6 +154,35 @@ class SwitcherPanel extends StatelessWidget {
           ),
         ),
         ),
+    );
+  }
+}
+
+//Reusable button for TAKE / SOURCE / etc.
+class ControlButton extends StatelessWidget {
+  const ControlButton({
+    super.key,
+    required this.title,
+    required this.action,
+  });
+
+  final String title;
+  final Function action;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+      minimumSize: Size.zero,
+      padding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+      onPressed: () {
+        action();
+    }, 
+    child: SizedBox(
+      width: 105,
+      height: 60,
+      child: Center(child: Text(title)))
     );
   }
 }
@@ -221,6 +206,8 @@ class ButtonGrid extends StatelessWidget {
       crossAxisCount: crossAxis,
       childAspectRatio: (width / height) / 1.99,
       children: [
+        //I believe it is best practice to update this to create an array of button objects 
+        //to pass into the GridView instead of generating them here. TODO
         for (var i = 0; i < appState.buttonList.length; i++)
           Padding(
             padding: const EdgeInsets.all(3),
@@ -237,25 +224,6 @@ class ButtonGrid extends StatelessWidget {
               child: Text("${i + 1}"))),
           )
         ],
-      );
-  }
-}
-
-class SwitcherButton extends StatelessWidget {
-  SwitcherButton({
-    super.key,
-    required this.i,
-  });
-
-  final int i;
-  late final int displayInt = i + 1;
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: () {
-        print("Button Pressed: $displayInt");
-      }, 
-      child: Text("Number $displayInt"),
       );
   }
 }
