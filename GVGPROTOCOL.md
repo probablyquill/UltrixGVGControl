@@ -19,10 +19,12 @@ RossTalk is an excellent option for very simple automation tasks or a simple con
 
 ogScript is an incredibly powerful option, however it is locked to the Dashboard platform, which means that there is no way to run any panel without also running Dashboard on the system. I have had reliability issues with Dashboard on the ARM Macs I often use for work, which has soured my relationship with the software.
 
-This leaves us with GVG, which has a feature set more comparable to ogScript, however it is a rather obnoxious protocol to implement due to how it is written. ogScript is heavily implemented into Dashboard— while that locks it to Dashboard, it also increases its ease of use. There were also just more ogScript resources on the Ross forums than for GVG. In comparison to ogScript, GVG is a hex-based TCP/IP protocol. While ogScript lets you just fire off commands, GVG requires to to build a command and generate its checksum before it can be sent to the router.
+This leaves us with GVG, which has a feature set more comparable to ogScript, however it is a rather obnoxious protocol to implement. ogScript is heavily implemented into Dashboard: while that locks it to Dashboard, it also increases its ease of use. There also are just more ogScript resources on the Ross forums than for GVG. In comparison to ogScript, GVG is a hex-based TCP/IP protocol. While ogScript lets you just fire off commands, GVG requires to to build a command and generate its checksum before it can be sent to the router.
 
 ## Using the GVG Protocol
 My biggest headache when working with the GVG Protocol was a lack of examples of it being implemented into code. I will be giving examples using Python for convenience, but this can very easily be integrated into any programming or scripting language that supports IP communication. 
+
+The GVG Native Commands need to be transfered over the network via TCP, in the form of hex codes. There is a Windows only tool for sending these codes called [Hercules](https://www.hw-group.com/software/hercules-setup-utility). Communication can also be done by sending the hex data over a normal TCP socket in a language such as Python.
 
 The GVG Protocol is built out of several pieces which are combined to send a single TCP/IP command to the Router.
 
@@ -135,7 +137,7 @@ def get_checksum(hex_data):
         data = int(hex_data[i], 16)
         total += data
         i += 1
-    # i = 48 + 48 + 48 + 54 = 198
+    # total = 48 + 48 + 48 + 54 = 198
 
     # Prevent overflow past max hex bit.
     # No value over FF (255) is allowed and will be truncated.
@@ -163,6 +165,7 @@ To start, we'll convert both numbers from integers to the ascii encoded as hex u
 Next we'll combine all of the numbers into the section of the command that will be used for the checksum.
 
 [protocol][sequence][command]
+[4E][30][command]
 
 Which turns in to:
 
@@ -176,15 +179,15 @@ checksum(4E 30 54 49 09 30 30 31 45 09 30 30 36 34) -> 51
 
 But wait a moment, that returned us a number. To be able to send a number through to the Router, it needs to be formatted using the number formatting process from before.
 
-51 -> "30 30 33 33
+51 -> "30 30 33 33"
 
 Specifically for the checksum, we do not want or need the leading zeroes which our function adds, so we can drop those when putting the command together.
 
-We can add the checksum, the soh, and the eoh, and that leaves us with the following GVG command:
+We can add the checksum, the soh (01), and the eoh (04), and that leaves us with the following GVG command:
 
 01 4E 30 54 49 09 30 30 31 45 09 30 30 36 34 33 33 04
 
-It is important to note that while I have added spaces both in this document and in the program, those spaces **CANNOT** be included in the packet sent to the system. When actually being sent, the data would look like this:
+It is important to note that while I have added spaces both in this document and in the program for the sake of readability, those spaces **CANNOT** be included in the packet sent to the system. When actually being sent, the data would look like this:
 
 014E30544909303031450930303634333304
 
@@ -222,6 +225,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     print(response)
 ```
 
+### Additional Example Commands:
+
+| Command Type: | Command | soh | protocol | sequence | command | checksum | eot | 
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Query Destinations | QN,D | 0x01 | 0x4E | 0x30 | 0x51 0x4E 0x09 0x30 0x44 | 0x36 0x36 | 0x04 |
+| Take 132, 100 | TI,dest,src | 0x01 | 0x4E | 0x30 | 0x54 0x49 0x09 0x30 0x30 0x38 0x33 0x09 0x30 0x30 0x30 0x39 | 0x33 0x66 | 0x04 |
+
+## Additional Resources:
 Getting everything set up for the first time was quite a hassle for me, so hopefully this is a useful resource for anyone else looking to create an application using the GVG protocol. I've attempted to consolidate what I've learned here, and to cover the different headaches I had while trying to understand what exactly I was working with. 
 
 Resources referred to in this document, as well as other helpful resources include:

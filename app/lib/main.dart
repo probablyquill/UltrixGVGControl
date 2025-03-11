@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+//GVG / Ross control functions will go here.
+import 'gvg.dart';
+
 void main() {
   runApp(MyApp());
 }
 
+//ChangeNotifier will manage all recieved router info.
 class AppState extends ChangeNotifier {
+  //true = Source Select, false = Dest Select
+  bool panelMode = true;
+  int selectedButton = -1;
+  int activeSource = 100; //Normaled for testing purposes, this should start at -1.
+  int activeDest = -1;
+
+  //Will need to be set by the response from the router.
+  String activeSrcName = "";
+  String activeDestName = "";
+
   var buttonList = <int>[];
 
   void generateButtos() {
@@ -14,7 +28,22 @@ class AppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void updateSelected(int button) {
+    selectedButton = button;
+    print("Selected $button");
+    print("Panel Mode: ${(panelMode) ? "Source" : "Dest"}");
+    print("Active Source: $activeSource");
+    print("Active Dest: $activeDest");
+    notifyListeners();
+  }
+
+  void setPanelType(bool type) {
+    panelMode = type;
+    notifyListeners();
+  }
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -75,11 +104,7 @@ class HomePage extends StatelessWidget {
 
 }
 
-//Placeholder action for unimplemented buttons.
-void placeholderAction() {
-  print("Placeholder Action Executed");
-}
-
+// SwitcherPanel module to be placed inside the HomePage.
 class SwitcherPanel extends StatelessWidget {
   const SwitcherPanel({
     super.key,
@@ -87,6 +112,7 @@ class SwitcherPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<AppState>();
 
     return Expanded(
       child: Center(
@@ -105,9 +131,9 @@ class SwitcherPanel extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                        ControlButton(title: "SOURCES", action: placeholderAction,),
+                        ControlButton(title: "SOURCES", action: (){appState.setPanelType(true);},),
                         SizedBox(height: 10),
-                        ControlButton(title: "DESTINATIONS", action: placeholderAction),
+                        ControlButton(title: "DESTINATIONS", action: (){appState.setPanelType(false);}),
                       ],),
                     ),
                     // This should potentially be broken out into it's own component for readability.
@@ -171,22 +197,39 @@ class ControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var color = Theme.of(context).colorScheme.primaryContainer;
+    var appState = context.watch<AppState>();
+
+    //Need to find a cleaner way to do this but it works for now.
+    //Covers the needed swapping for SOURCES and DESTINATIONS while
+    //leaving TAKE and CLEAR alone.
+
+    //panelMode is true if SRC is selected, false if DEST is selected.
+    if (title == "SOURCES" && appState.panelMode) {
+      color = Theme.of(context).colorScheme.onPrimaryContainer;
+    } 
+    if (title == "DESTINATIONS" && !appState.panelMode) {
+      color = Theme.of(context).colorScheme.onPrimaryContainer;
+    }
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
       minimumSize: Size.zero,
       padding: EdgeInsets.zero,
+      backgroundColor: color,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
       onPressed: () {
         action();
     }, 
     child: SizedBox(
-      width: 105,
+      width: 110,
       height: 60,
       child: Center(child: Text(title)))
     );
   }
 }
 
+//Houses just the generated grid of buttons for the SwitcherPanel
 class ButtonGrid extends StatelessWidget {
   const ButtonGrid({
     super.key,
@@ -207,23 +250,60 @@ class ButtonGrid extends StatelessWidget {
       childAspectRatio: (width / height) / 1.99,
       children: [
         //I believe it is best practice to update this to create an array of button objects 
-        //to pass into the GridView instead of generating them here. TODO
+        //to pass into the GridView instead of generating them here. Will fix later.
         for (var i = 0; i < appState.buttonList.length; i++)
           Padding(
             padding: const EdgeInsets.all(3),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: EdgeInsets.zero,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
-              onPressed: () {
-                  print(i);
-            }, child: FittedBox(
-              fit: BoxFit.fitWidth,
-              child: Text("${i + 1}"))),
-          )
+            child: PanelButton(number: i),
+          ),
         ],
       );
   }
+}
+
+//Broken out to its own class in preperation to later change how buttons are generated.
+class PanelButton extends StatelessWidget {
+  const PanelButton({
+    super.key,
+    required this.number,
+  });
+
+  final int number;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<AppState>();
+    int status = 0;
+
+    //Detect what the selected button should be based on the panel mode.
+    int active = (appState.panelMode) ? appState.activeSource : appState.activeDest;
+    //Checks to see if the active value is the same as the selected
+    if (appState.selectedButton == number) status = (active == number) ? 2 : 1;
+
+    //Determine button color based on the status.
+    var color = Theme.of(context).colorScheme.primaryContainer;
+    if (status == 1) {
+      color = Theme.of(context).colorScheme.tertiaryContainer;
+    } else if (status == 2){
+      color = Theme.of(context).colorScheme.onPrimaryContainer;
+    }
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        minimumSize: Size.zero,
+        padding: EdgeInsets.zero,
+        backgroundColor: color,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+      onPressed: () {
+          appState.updateSelected(number);
+          print("Status: $status");
+    }, child: FittedBox(
+      fit: BoxFit.fitWidth,
+      child: Text("${number + 1}")));
+  }
+}
+
+//Placeholder action for unimplemented buttons.
+void placeholderAction() {
+  print("Placeholder Action Executed");
 }
