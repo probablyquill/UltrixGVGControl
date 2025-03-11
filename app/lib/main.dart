@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         title: 'buttonTest',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 36, 69, 255)),
         ),
         home: HomePage(),
       ),
@@ -82,28 +82,120 @@ class SwitcherPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
+    final double width = MediaQuery.of(context).size.width;
+    final double height = MediaQuery.of(context).size.height;
     return Expanded(
       child: Center(
-        child: Column(
-          children: [
-            Text("Header Bar Goes Here"),
-            Flexible(
-              child: Row(
-                children: [
-                  Column(children: [
-                    Text("Sources"),
-                    Text("Destinations"),
-                  ],),
-                  Flexible(child: ButtonGrid()),
-                  Column(children: [
-                    Text("TAKE"),
-                    Text("CLEAR"),
-                  ],),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+                          onPressed: () {
+                        
+                        }, 
+                        child: SizedBox(
+                          width: 105,
+                          height: 60,
+                          child: Center(child: Text("SOURCES")))
+                        ),
+                        SizedBox(height: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+                          onPressed: () {
+                        
+                        }, 
+                        child: SizedBox(
+                          width: 105,
+                          height: 60,
+                          child: Center(child: Text("DESTINATIONS")))
+                        ),
+                      ],),
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Row(
+                                children: [
+                                  Text("Destination:"),
+                                  SizedBox(width: 10),
+                                  Text("DEST"),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text("Source:"),
+                                  SizedBox(width: 10),
+                                  Text("SRC"),
+                                ],
+                              ),
+                          ],),
+                          ButtonGrid()
+                        ]
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+                          
+                          onPressed: () {
+                        
+                        }, 
+                        child: SizedBox(
+                          width: 105,
+                          height: 60,
+                          child: Center(child: Text("TAKE")))
+                        ),
+                        SizedBox(height: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
+                          onPressed: () {
+                        
+                        }, 
+                        child: SizedBox(
+                          width: 105,
+                          height: 60,
+                          child: Center(child: Text("CLEAR")))
+                        ),
+                      ],),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         ),
     );
@@ -124,17 +216,19 @@ class ButtonGrid extends StatelessWidget {
 
     return GridView.count(
       primary: false,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(1),
+      shrinkWrap: true,
       crossAxisCount: crossAxis,
-      //childAspectRatio: (width / height) / 1.8,
+      childAspectRatio: (width / height) / 1.99,
       children: [
         for (var i = 0; i < appState.buttonList.length; i++)
           Padding(
-            padding: const EdgeInsets.all(1.5),
+            padding: const EdgeInsets.all(3),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: Size.zero,
                 padding: EdgeInsets.zero,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
               onPressed: () {
                   print(i);
