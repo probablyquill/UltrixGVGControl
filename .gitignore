@@ -36,6 +36,7 @@ app/windows/
 app/android/
 app/macos/
 app/web/
+app/ios
 
 
 # Symbolication related
