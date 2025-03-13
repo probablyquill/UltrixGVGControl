@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-//GVG / Ross control functions will go here.
-import 'gvg.dart';
-
 void main() {
   runApp(MyApp());
 }
 
-//ChangeNotifier will manage all recieved router info.
+// ChangeNotifier will manage all recieved router info.
 class AppState extends ChangeNotifier {
-  //true = Source Select, false = Dest Select
+  // true = Source Select, false = Dest Select
   bool panelMode = true;
   int selectedButton = -1;
   int activeSource = 100; //Normaled for testing purposes, this should start at -1.
   int activeDest = -1;
 
-  //Will need to be set by the response from the router.
+  // Will need to be set by the response from the router.
   String activeSrcName = "";
   String activeDestName = "";
 
@@ -184,7 +181,7 @@ class SwitcherPanel extends StatelessWidget {
   }
 }
 
-//Reusable button for TAKE / SOURCE / etc.
+// Reusable button for TAKE / SOURCE / etc.
 class ControlButton extends StatelessWidget {
   const ControlButton({
     super.key,
@@ -200,11 +197,11 @@ class ControlButton extends StatelessWidget {
     var color = Theme.of(context).colorScheme.primaryContainer;
     var appState = context.watch<AppState>();
 
-    //Need to find a cleaner way to do this but it works for now.
-    //Covers the needed swapping for SOURCES and DESTINATIONS while
-    //leaving TAKE and CLEAR alone.
+    // Need to find a cleaner way to do this but it works for now.
+    // Covers the needed swapping for SOURCES and DESTINATIONS while
+    // leaving TAKE and CLEAR alone.
 
-    //panelMode is true if SRC is selected, false if DEST is selected.
+    // panelMode is true if SRC is selected, false if DEST is selected.
     if (title == "SOURCES" && appState.panelMode) {
       color = Theme.of(context).colorScheme.onPrimaryContainer;
     } 
@@ -229,7 +226,7 @@ class ControlButton extends StatelessWidget {
   }
 }
 
-//Houses just the generated grid of buttons for the SwitcherPanel
+// Houses just the generated grid of buttons for the SwitcherPanel
 class ButtonGrid extends StatelessWidget {
   const ButtonGrid({
     super.key,
@@ -249,8 +246,8 @@ class ButtonGrid extends StatelessWidget {
       crossAxisCount: crossAxis,
       childAspectRatio: (width / height) / 1.99,
       children: [
-        //I believe it is best practice to update this to create an array of button objects 
-        //to pass into the GridView instead of generating them here. Will fix later.
+        // I believe it is best practice to update this to create an array of button objects 
+        // to pass into the GridView instead of generating them here. Will fix later.
         for (var i = 0; i < appState.buttonList.length; i++)
           Padding(
             padding: const EdgeInsets.all(3),
@@ -261,7 +258,7 @@ class ButtonGrid extends StatelessWidget {
   }
 }
 
-//Broken out to its own class in preperation to later change how buttons are generated.
+// Broken out to its own class in preperation to later change how buttons are generated.
 class PanelButton extends StatelessWidget {
   const PanelButton({
     super.key,
@@ -275,12 +272,12 @@ class PanelButton extends StatelessWidget {
     var appState = context.watch<AppState>();
     int status = 0;
 
-    //Detect what the selected button should be based on the panel mode.
+    // Detect what the selected button should be based on the panel mode.
     int active = (appState.panelMode) ? appState.activeSource : appState.activeDest;
-    //Checks to see if the active value is the same as the selected
+    // Checks to see if the active value is the same as the selected
     if (appState.selectedButton == number) status = (active == number) ? 2 : 1;
 
-    //Determine button color based on the status.
+    // Determine button color based on the status.
     var color = Theme.of(context).colorScheme.primaryContainer;
     if (status == 1) {
       color = Theme.of(context).colorScheme.tertiaryContainer;
@@ -303,7 +300,7 @@ class PanelButton extends StatelessWidget {
   }
 }
 
-//Placeholder action for unimplemented buttons.
+// Placeholder action for unimplemented buttons.
 void placeholderAction() {
   print("Placeholder Action Executed");
 }

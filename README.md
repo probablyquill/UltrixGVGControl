@@ -12,7 +12,7 @@ The commands which need to be implemented to create a custom software panel are 
 | Query Name | QN,IS | 0x51 0x4E | 
 | Remove Protect by Index | UI,dest_name | 0x55 0x49 |
 | Protect by Index | PI,dest_index | 0x50, 0x49 |
-| Query Destination | QI,dest_index | 0x51 0x49 | 
+| Query Destination | QJ,dest_index | 0x51 0x49 | 
 
 Note: UI and PI may be unsupported by Ultrix, needs to be tested. The only option may be to use the UP and PR commands. These commands use the destination name instead of the index.
 
