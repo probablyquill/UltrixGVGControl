@@ -1,7 +1,7 @@
 # Communicating with a Ross Ultrix Router over IP using the GVG protocol
 The goal of this project is to create a program that can interface with a Ross Ultrix Router over IP using the GVG protocol.
 
-An explanation and guide to the GVG Protocol which this program will used can be found [here.](GVGPROTOCOL.md)
+An explanation and guide to the GVG Protocol which this program implements can be found [here.](GVGPROTOCOL.md)
 
 ## Commands to Implement:
 The commands which need to be implemented to create a custom software panel are as follows: 

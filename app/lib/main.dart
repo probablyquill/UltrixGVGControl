@@ -1,44 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'gvg.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 // ChangeNotifier will manage all recieved router info.
+// A bit unsure if this should be strucutred as so, it might be more correct to 
+// break some or all of it into a stateful SwitcherPanel widget.
+
 class AppState extends ChangeNotifier {
   // true = Source Select, false = Dest Select
+  String panelIP = "192.168.77.225";
+  int panelPort = 12345;
   bool panelMode = true;
+
+  int activeSource = -1;
+  int selectedSource = -1;
   int selectedButton = -1;
-  int activeSource = 100; //Normaled for testing purposes, this should start at -1.
   int activeDest = -1;
 
   // Will need to be set by the response from the router.
+  List<String> sourceNames = <String>[];
+  List<String> destNames = <String>[];
   String activeSrcName = "";
   String activeDestName = "";
 
   var buttonList = <int>[];
 
-  void generateButtos() {
-    for (int i = 0; i < 144; i++) {
-        buttonList.add(i);
+  void generateButtons() {
+    if (buttonList.isEmpty) {
+      for (int i = 0; i < 144; i++) {
+          buttonList.add(i);
+      }
     }
-    notifyListeners();
   }
 
-  void updateSelected(int button) {
+  void updateSelected(int button) async {
     selectedButton = button;
+
+    if (panelMode) {
+      selectedSource = button;
+    } else {
+      activeDest = button;
+    }
     print("Selected $button");
     print("Panel Mode: ${(panelMode) ? "Source" : "Dest"}");
     print("Active Source: $activeSource");
     print("Active Dest: $activeDest");
+    print("Selected source: $selectedSource");
+
+    // No reason to continue the check if panel is set to sources.
+    if (!panelMode) {
+      String command = queryDestinationStatus(activeDest);
+      List<String> data = await sendCommand(panelIP, panelPort, command);
+      if (data.isEmpty) return; //Temporary error handling for lack of connection / bad requests.
+      activeSource = gvgDeconvertNumber(data[2]);
+      selectedSource = activeSource;
+    }
+
+    //not sure why sources only are off by one. need to fix.
+    if (sourceNames.length > (selectedSource + 1) && destNames.length > activeDest) {
+      activeSrcName = sourceNames[selectedSource + 1];
+      activeDestName = destNames[activeDest];
+    }
+
     notifyListeners();
   }
 
   void setPanelType(bool type) {
     panelMode = type;
+    selectedButton = (type) ? selectedSource : activeDest;
     notifyListeners();
   }
+
+  //This only needs to be run occasionally, need to figure out how to do that. Timer?
+  void getSrcDestNames() async {
+    String command1 = queryDestination();
+    String command2 = querySource();
+
+    sourceNames = await sendCommand(panelIP, panelPort, command2);
+    destNames = await sendCommand(panelIP, panelPort, command1);
+  }
+
+  void executeTake() {
+    // Quick check for invalid inputs before firing the command. 
+    if (selectedSource < 1 || activeDest < 1) return;
+  }
+
 }
 
 class MyApp extends StatelessWidget {
@@ -66,18 +116,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<AppState>();
 
-    if (appState.buttonList.isEmpty) {
-      return Center(
-        child: TextButton(
-          onPressed: () {
-            appState.generateButtos();
-          }, 
-          child: Text("Hit me"),
-          ),
-      );
-    }
     return Scaffold(
       body: Row(
         children: [
@@ -110,7 +149,10 @@ class SwitcherPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<AppState>();
-
+    // This should be done differently; both of these only need to be run once on start not every build.
+    // However I'm not sure where to put them because they rely on context.
+    appState.generateButtons();
+    appState.getSrcDestNames();
     return Expanded(
       child: Center(
         child: Padding(
@@ -145,14 +187,14 @@ class SwitcherPanel extends StatelessWidget {
                                 children: [
                                   Text("Destination:"),
                                   SizedBox(width: 10),
-                                  Text("DEST"),
+                                  Text(appState.activeDestName),
                                 ],
                               ),
                               Row(
                                 children: [
                                   Text("Source:"),
                                   SizedBox(width: 10),
-                                  Text("SRC"),
+                                  Text(appState.activeSrcName),
                                 ],
                               ),
                           ],),
@@ -248,7 +290,7 @@ class ButtonGrid extends StatelessWidget {
       children: [
         // I believe it is best practice to update this to create an array of button objects 
         // to pass into the GridView instead of generating them here. Will fix later.
-        for (var i = 0; i < appState.buttonList.length; i++)
+        for (var i = 1; i <= appState.buttonList.length; i++)
           Padding(
             padding: const EdgeInsets.all(3),
             child: PanelButton(number: i),
@@ -275,7 +317,14 @@ class PanelButton extends StatelessWidget {
     // Detect what the selected button should be based on the panel mode.
     int active = (appState.panelMode) ? appState.activeSource : appState.activeDest;
     // Checks to see if the active value is the same as the selected
-    if (appState.selectedButton == number) status = (active == number) ? 2 : 1;
+    if (appState.selectedButton == number) {
+      // If the panel is in dest mode, selected and activeDest should always be the same.
+      if (appState.panelMode) {
+        status = (active == number) ? 2 : 1;
+      } else {
+        status = 2;
+      }
+    }
 
     // Determine button color based on the status.
     var color = Theme.of(context).colorScheme.primaryContainer;
@@ -293,10 +342,9 @@ class PanelButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
       onPressed: () {
           appState.updateSelected(number);
-          print("Status: $status");
     }, child: FittedBox(
       fit: BoxFit.fitWidth,
-      child: Text("${number + 1}")));
+      child: Text("$number")));
   }
 }
 

@@ -106,7 +106,7 @@ def gvg_command2(command, arg1):
 # print(command)
 
 # Test for Query Name, destination 132
-command = gvg_command2(qn, "D")
+command = gvg_command(ti, 132, 10)
 print(command)
 # Example from forums (working, dest 118 source 90):
 # 01 4E 30 54 49 09 30 30 37 35 09 30 30 35 39 33 39 04

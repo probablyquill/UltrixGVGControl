@@ -1,4 +1,5 @@
 import "dart:io";
+import "dart:async";
 
 const _soh = "01 ";
 const _protocol = "4E 30 ";
@@ -29,7 +30,7 @@ String _gvgConvertNumber(int number) {
   return outputString;
 }
 
-int _gvgDeconvertNumber(String input) {
+int gvgDeconvertNumber(String input) {
   int output = int.parse("0x$input");
   return output;
 }
@@ -47,7 +48,7 @@ String _gvgChecksum(String preChecksum) {
   // byteList - 1 is used because the given String will have a trailing space.
   for (int i = 0; i < byteList.length - 1; i++) {
       String temp = byteList[i];
-      total += _gvgDeconvertNumber(temp);
+      total += gvgDeconvertNumber(temp);
   }
   
   total = total & 0xFF;
@@ -59,7 +60,7 @@ String _gvgChecksum(String preChecksum) {
 
 // EXAMPLE RESPONSE:      CROSSPOINT IN HEX (convert to decimal 81 -> 129; 129 + 1 = 130)
 // N0JQ\t0063\t3\tN\tN\t 0081        \t000001F9\tP\tN\t0058\t00000006\tN\tN\t0000\t0001FE00\t39
-String _queryDestinationStatus(int destination) {
+String queryDestinationStatus(int destination) {
   String qds = "51 4A ";
 
   destination = destination - 1;
@@ -74,7 +75,7 @@ String _queryDestinationStatus(int destination) {
   return command;
 }
 
-String _take(int destination, int source) {
+String take(int destination, int source) {
   String take = "54 49 ";
   
   // GVG Protocol counts from zero.
@@ -84,13 +85,14 @@ String _take(int destination, int source) {
   String destHex = _gvgConvertNumber(destination);
   String sourceHex = _gvgConvertNumber(source);
 
-  String takeCommand = "$_protocol$take$_tab$destHex$sourceHex";
+  String takeCommand = "$_protocol$take$_tab$destHex$_tab$sourceHex";
   String checksum = _gvgChecksum(takeCommand);
   takeCommand = "$_soh$takeCommand$checksum$_eol";
   return takeCommand;
 }
 
-String _queryDestination() {
+// These can be hardcoded but I will want to keep the code that generates them somewhere. 
+String queryDestination() {
   String command = "51 4E 09 44 ";
   command = "$_protocol$command";
 
@@ -99,7 +101,7 @@ String _queryDestination() {
   return command;
 }
 
-String _querySource() {
+String querySource() {
   String command = "51 4E 09 53 ";
   command = "$_protocol$command";
 
@@ -108,9 +110,10 @@ String _querySource() {
   return command;
 }
 
-void _sendCommand(String ipaddr, int port, String message) async {
+Future<List<String>> sendCommand(String ipaddr, int port, String message) async {
   Socket socket;
   List<int> bytes = [];
+  Completer<List<String>> output = Completer<List<String>>();
   String dataResponse = "";
 
   // Converts command string to bytes to send over a socket.
@@ -119,57 +122,58 @@ void _sendCommand(String ipaddr, int port, String message) async {
     bytes.add(int.parse("0x${message[i]}${message[i + 1]}"));
   }
 
-  socket = await Socket.connect(ipaddr, port);
-  socket.add(bytes);
-  socket.listen(
-    (data) {
-      // Clean up and compile responses.
-      String response = String.fromCharCodes(data).trim();
-      dataResponse += response;
-      // Final packet ends with FFFFFFFF63 in the long responses (list of dest and list of source)
-      if (response.contains("FFFFFFFF63")) socket.close();
-      // Different commands will lead with different identifiers, which can be used to identify single-packet
-      // responses.
-      if (response.substring(0, 5).contains("N0JQ")) socket.close();
-    },
-    onDone: () {
-      List<String> responses = _dataCleaner(dataResponse);
-      print(responses);
-      socket.destroy();
+  try { //Catches Socket timeout exception -> potentially should be moved
+    socket = await Socket.connect(ipaddr, port, timeout: Duration(seconds: 3));
+    socket.add(bytes);
+    socket.listen(
+      (data) {
+        // If the command sent was a take command, the server will respond with only bytes.
+        // Clean up and compile responses.
+        String response = String.fromCharCodes(data).trim();
+        dataResponse += response;
+        // Final packet ends with FFFFFFFF63 in the long responses (list of dest and list of source)
+        if (response.contains("FFFFFFFF63")) socket.close();
+        // Different commands will lead with different identifiers, which can be used to identify single-packet
+        // responses.
+        String header = response.substring(0, 5);
+        if (header.contains("N0JQ")) socket.close();
+        if (header.contains("N0ER")) socket.close();
       },
-    onError: (error) {
-      print('Error: $error');
-      socket.destroy();
-    }
-  );
+      onDone: () {
+        output.complete(_dataCleaner(dataResponse));
+        socket.destroy();
+        },
+      onError: (error) {
+        print('Error: $error');
+        socket.destroy();
+      }
+    );
+  } on SocketException { //For now, empty list will translate as connection error. Command error should still return data.
+    output.complete([]);
+  }
+
+  return output.future;
 }
 
 List<String> _dataCleaner(response) {
   //Data is split with tabs: breaking it into an array like this breaks everything up nicely.
-  List<String> dataParse = response.split("\t");
+  List<String> dataToParse = response.split("\t");
   List<String> cleanArray = [];
 
-  // Clean data. i starts at 1 because we are skiping an identifier value.
-  for (int i = 1; i < dataParse.length; i++) {
-    bool addFlag = true;
-    String value = dataParse[i];
+  // Clean data.
+  for (int i = 0; i < dataToParse.length; i++) {
+    String value = dataToParse[i];
 
-    // This is fine for stripping the excess data for now, but that data probably means something.
-    if (value.length == 1) addFlag = false;
-    // Removes header for source/dest name packet group.
-    if (value.contains("FFFFFF")) addFlag = false;
-    if (addFlag) cleanArray.add(value.trim());
+    // This is fine for stripping the excess data and empty spaces for now, but that data probably means something.
+    if (value.length <= 1) continue;
+    if (value.contains("FFFFFF")) continue;
+    cleanArray.add(value.trim());
   }
-  // Temporary trim to 144 for testing. Cuts out MV and MADI name that are on the end of source/dest responses.
+  // Temporary trim to 144 + 1 for testing (includes leading identifier). 
+  // Cuts out MV and MADI name that are on the end of source/dest responses.
   // Single packet responses will not get anywhere near the threshold and will be untouched.
-  for (int i = cleanArray.length - 1; i >= 144; i--) {
+  for (int i = cleanArray.length - 1; i >= 145; i--) {
     cleanArray.removeAt(i);
   }
   return cleanArray;
-}
-
-void main() {
-  String message = _queryDestination();
-
-  _sendCommand("192.168.0.100", 12345, message);
 }
